@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: 현재 파일 실행",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: 연습장 실행",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/playground.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: 학습 도구 (run.py)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "args": ["play"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
