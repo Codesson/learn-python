@@ -8,6 +8,9 @@ const XP_PER_EXERCISE = 25;
 const XP_PER_CHAPTER = 50;
 const XP_PER_LEVEL = 100;
 
+const MODE_KEY = "python-quest-mode";
+const JS_LINE_PATTERN = /^JS[\s:의와에]|JavaScript|Node\.js|\(JS[\s:의와에)]/;
+
 // ── State ──────────────────────────────────────
 const state = {
   pyodide: null,
@@ -15,6 +18,7 @@ const state = {
   currentChapter: null,
   currentSectionIdx: 0,
   sidebarOpen: true,
+  mode: localStorage.getItem(MODE_KEY) || "python",
   progress: loadProgress(),
 };
 
@@ -34,6 +38,7 @@ function saveProgress() {
 
 // ── Initialization ─────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+  applyMode(state.mode);
   initEditor();
   buildChapterList();
   bindEvents();
@@ -67,20 +72,9 @@ import io
     await sleep(400);
     const loadingScreen = document.getElementById("loading-screen");
     loadingScreen.classList.add("fade-out");
-    document.getElementById("app").classList.remove("hidden");
+    setTimeout(() => loadingScreen.remove(), 600);
 
-    setTimeout(() => {
-      loadingScreen.remove();
-      state.editor.refresh();
-    }, 600);
-
-    const contentSections = getContentSections();
-    if (contentSections.length === 0) {
-      loadChapter(CHAPTERS_DATA[0]);
-    }
-
-    await sleep(100);
-    state.editor.refresh();
+    showIntro();
   } catch (err) {
     status.textContent = "Pyodide 로딩 실패 — 새로고침 해 주세요";
     console.error("Pyodide load error:", err);
@@ -91,17 +85,72 @@ import io
     await sleep(1500);
     const loadingScreen = document.getElementById("loading-screen");
     loadingScreen.classList.add("fade-out");
-    document.getElementById("app").classList.remove("hidden");
-    setTimeout(() => {
-      loadingScreen.remove();
-      state.editor.refresh();
-    }, 600);
+    setTimeout(() => loadingScreen.remove(), 600);
+
+    showIntro();
   }
+}
+
+function showIntro() {
+  const intro = document.getElementById("intro-screen");
+  intro.classList.remove("hidden");
+
+  const jsCheck = document.getElementById("intro-js-check");
+  jsCheck.checked = state.mode === "js";
+
+  document.getElementById("btn-start").addEventListener("click", () => {
+    applyMode(jsCheck.checked ? "js" : "python");
+    intro.classList.add("fade-out");
+    document.getElementById("app").classList.remove("hidden");
+
+    setTimeout(() => {
+      intro.remove();
+      state.editor.refresh();
+    }, 500);
+
+    const contentSections = getContentSections();
+    if (contentSections.length === 0) {
+      loadChapter(CHAPTERS_DATA[0]);
+    }
+
+    setTimeout(() => state.editor.refresh(), 150);
+  });
+}
+
+// ── Mode Toggle ────────────────────────────────
+function applyMode(mode) {
+  state.mode = mode;
+  localStorage.setItem(MODE_KEY, mode);
+  document.body.classList.toggle("mode-python", mode === "python");
+  document.body.classList.toggle("mode-js", mode === "js");
+
+  const icon = document.getElementById("mode-toggle-icon");
+  const label = document.getElementById("mode-toggle-label");
+  const btn = document.getElementById("btn-mode-toggle");
+  if (icon && label && btn) {
+    icon.textContent = mode === "js" ? "🔀" : "🐣";
+    label.textContent = mode === "js" ? "JS 비교" : "Python";
+    btn.classList.toggle("js-mode", mode === "js");
+  }
+
+  if (state.currentChapter) renderSection();
+}
+
+function toggleMode() {
+  applyMode(state.mode === "js" ? "python" : "js");
+  const msg = state.mode === "js"
+    ? "🔀 JS 개발자 모드: JavaScript와 비교하며 학습합니다"
+    : "🐣 순수 Python 모드: 파이썬에 집중합니다";
+  showToast(msg, "");
+}
+
+function isJsLine(text) {
+  return JS_LINE_PATTERN.test(text.trim());
 }
 
 function initEditor() {
   state.editor = CodeMirror(document.getElementById("editor-container"), {
-    value: '# 코드를 작성하고 ▶ 실행 버튼을 눌러보세요!\nprint("Hello, Python Quest! 🐍")\n',
+    value: '# 코드를 작성하고 ▶ 실행 버튼을 눌러보세요!\nprint("Hello, Python Quest!")\n',
     mode: "python",
     theme: "dracula",
     lineNumbers: true,
@@ -174,7 +223,10 @@ function loadChapter(chapter) {
 
 function getContentSections() {
   if (!state.currentChapter) return [];
-  return state.currentChapter.sections.filter((s) => s.type !== "comparison" || true);
+  if (state.mode === "python") {
+    return state.currentChapter.sections.filter((s) => s.type !== "comparison");
+  }
+  return state.currentChapter.sections;
 }
 
 function renderSection() {
@@ -190,6 +242,7 @@ function renderSection() {
 
   const block = document.createElement("div");
   block.className = "section-block";
+  block.dataset.type = section.type;
 
   const sectionKey = `${ch.id}:${state.currentSectionIdx}`;
   const isDone = state.progress.completedSections.includes(sectionKey);
@@ -237,7 +290,7 @@ function renderSection() {
     `;
     (section.blocks || []).forEach((b, bi) => {
       if (b.type === "text") {
-        html += `<div class="content-text">${escapeHtml(b.content)}</div>`;
+        html += renderTextBlock(b.content);
       } else if (b.type === "code") {
         const highlighted = hljs.highlight(b.content, { language: "python" }).value;
         html += `
@@ -521,6 +574,23 @@ function updateStats() {
   document.getElementById("progress-ring").setAttribute("stroke-dasharray", `${pct}, 100`);
 }
 
+function resetProgress() {
+  if (!confirm("모든 학습 진행 상황(XP, 레벨, 완료 기록)이 초기화됩니다.\n정말 초기화할까요?")) return;
+
+  state.progress = { xp: 0, completedSections: [], completedChapters: [], streak: 0, lastDate: null };
+  saveProgress();
+  updateStats();
+
+  document.querySelectorAll(".chapter-item.completed").forEach((el) => {
+    el.classList.remove("completed");
+    el.querySelector(".ch-status").textContent = "○";
+  });
+
+  if (state.currentChapter) renderSection();
+
+  showToast("🔄 진행 상황이 초기화되었습니다.", "");
+}
+
 // ── Toast & Level-up ───────────────────────────
 function showToast(message, type) {
   const container = document.getElementById("toast-container");
@@ -565,11 +635,14 @@ function bindEvents() {
   });
 
   document.getElementById("btn-run").addEventListener("click", runCode);
+  document.getElementById("btn-mode-toggle").addEventListener("click", toggleMode);
 
   document.getElementById("btn-clear").addEventListener("click", () => {
     state.editor.setValue('# 코드를 작성하세요\n\n');
     state.editor.focus();
   });
+
+  document.getElementById("btn-reset").addEventListener("click", resetProgress);
 
   document.getElementById("btn-clear-terminal").addEventListener("click", () => {
     document.getElementById("terminal-output").innerHTML = "";
@@ -699,6 +772,21 @@ function initKeyboardShortcuts() {
 }
 
 // ── Helpers ────────────────────────────────────
+function renderTextBlock(content) {
+  const lines = content.split("\n");
+  let html = '<div class="content-text">';
+  lines.forEach((line) => {
+    const escaped = escapeHtml(line);
+    if (isJsLine(line)) {
+      html += `<span class="js-hint-line">${escaped}</span>\n`;
+    } else {
+      html += escaped + "\n";
+    }
+  });
+  html += "</div>";
+  return html;
+}
+
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;

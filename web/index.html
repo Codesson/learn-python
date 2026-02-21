@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🐍 Python Quest — 인터랙티브 파이썬 학습</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>" />
+  <title>Python Quest — 인터랙티브 파이썬 학습</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
   <link rel="stylesheet" href="css/style.css" />
   <!-- CodeMirror 5 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
@@ -25,7 +25,7 @@
   <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="loader-content">
-      <div class="loader-icon">🐍</div>
+      <div class="loader-icon">🎮</div>
       <h1>Python Quest</h1>
       <p class="loader-sub">인터랙티브 파이썬 학습 플랫폼</p>
       <div class="loader-bar-track">
@@ -35,13 +35,53 @@
     </div>
   </div>
 
+  <!-- Intro Screen -->
+  <div id="intro-screen" class="hidden">
+    <div class="intro-content">
+      <div class="intro-badge">MSCH 문화선교학교</div>
+      <h1 class="intro-title">AI/SW 학교<br><span>Python Quest</span></h1>
+      <p class="intro-desc">
+        프로그래밍이 처음이어도 괜찮아요!<br>
+        게임처럼 한 단계씩 클리어하며 파이썬을 배워봅시다.
+      </p>
+      <div class="intro-features">
+        <div class="intro-feature">
+          <span class="intro-feature-icon">📖</span>
+          <div>
+            <strong>21개 챕터</strong>
+            <p>기초부터 데이터 사이언스까지</p>
+          </div>
+        </div>
+        <div class="intro-feature">
+          <span class="intro-feature-icon">💻</span>
+          <div>
+            <strong>브라우저 실행</strong>
+            <p>설치 없이 바로 코드 실행</p>
+          </div>
+        </div>
+        <div class="intro-feature">
+          <span class="intro-feature-icon">🏆</span>
+          <div>
+            <strong>XP &amp; 레벨</strong>
+            <p>게임처럼 성장하는 학습</p>
+          </div>
+        </div>
+      </div>
+      <button id="btn-start" class="intro-start-btn">학습 시작하기</button>
+      <label class="intro-js-toggle" id="intro-js-toggle">
+        <input type="checkbox" id="intro-js-check" />
+        <span>JavaScript 개발자라면? JS 비교 모드 켜기</span>
+      </label>
+    </div>
+  </div>
+
   <!-- Main App -->
   <div id="app" class="hidden">
     <!-- Top Bar -->
     <header id="topbar">
       <div class="topbar-left">
         <button id="sidebar-toggle" class="icon-btn" title="메뉴">☰</button>
-        <h1 class="logo">🐍 <span>Python Quest</span></h1>
+        <h1 class="logo"><span>Python Quest</span></h1>
       </div>
       <div class="topbar-center">
         <div class="xp-bar-container">
@@ -55,8 +95,13 @@
         </div>
       </div>
       <div class="topbar-right">
+        <button id="btn-mode-toggle" class="mode-toggle-btn" title="학습 모드 전환">
+          <span id="mode-toggle-icon">🐣</span>
+          <span id="mode-toggle-label">Python</span>
+        </button>
         <span id="completed-count" class="stat-badge" title="완료한 섹션">✅ 0</span>
         <span id="streak-badge" class="stat-badge" title="연속 학습일">🔥 0일</span>
+        <button id="btn-reset" class="icon-btn" title="진행 초기화">🔄</button>
       </div>
     </header>
 

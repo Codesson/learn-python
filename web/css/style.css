@@ -97,6 +97,137 @@ html, body {
 
 .loader-sub { color: var(--text-dim); margin-bottom: 24px; }
 
+/* =============================================
+   Intro Screen
+   ============================================= */
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-overlay);
+  overflow-y: auto;
+}
+#intro-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.intro-content {
+  text-align: center;
+  max-width: 520px;
+  padding: 40px 24px;
+  animation: popIn 0.5s ease;
+}
+
+.intro-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--mauve), var(--pink));
+  color: var(--bg-overlay);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 16px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+.intro-title {
+  font-size: 1.6rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+.intro-title span {
+  font-size: 2.6rem;
+  display: block;
+  margin-top: 4px;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intro-desc {
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+
+.intro-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+  text-align: left;
+}
+.intro-feature {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+.intro-feature-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+.intro-feature strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.intro-feature p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.intro-start-btn {
+  background: linear-gradient(135deg, var(--green), var(--teal));
+  color: var(--bg-overlay);
+  border: none;
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(166, 227, 161, 0.3);
+}
+.intro-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(166, 227, 161, 0.45);
+}
+
+/* Intro JS Toggle */
+.intro-js-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.intro-js-toggle:hover { color: var(--text-dim); }
+.intro-js-toggle input[type="checkbox"] {
+  accent-color: var(--yellow);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
 .loader-bar-track {
   width: 260px;
   height: 6px;
@@ -193,13 +324,49 @@ html, body {
   transition: width 0.5s ease;
 }
 
-.topbar-right { display: flex; gap: 10px; }
+.topbar-right { display: flex; gap: 10px; align-items: center; }
 .stat-badge {
   font-size: 0.8rem;
   background: var(--surface0);
   padding: 4px 10px;
   border-radius: 20px;
   white-space: nowrap;
+}
+
+/* Mode Toggle Button */
+.mode-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface0);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.mode-toggle-btn:hover { background: var(--surface1); }
+.mode-toggle-btn.js-mode {
+  border-color: var(--yellow);
+  background: rgba(249, 226, 175, 0.1);
+  color: var(--yellow);
+}
+
+/* JS content visibility */
+.js-hint-line {
+  color: var(--text-muted);
+  font-style: italic;
+  border-left: 2px solid var(--yellow);
+  padding-left: 8px;
+  margin: 2px 0;
+}
+body.mode-python .js-hint-line,
+body.mode-python .section-block[data-type="comparison"] {
+  display: none;
 }
 
 /* =============================================
@@ -633,7 +800,7 @@ html, body {
   height: 100%;
   font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.8;
 }
 #editor-container .CodeMirror-gutters {
   border-right: 1px solid var(--border);
