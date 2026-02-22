@@ -99,7 +99,9 @@ function showIntro() {
   jsCheck.checked = state.mode === "js";
 
   document.getElementById("btn-start").addEventListener("click", () => {
-    applyMode(jsCheck.checked ? "js" : "python");
+    const selectedMode = jsCheck.checked ? "js" : "python";
+    applyMode(selectedMode);
+    Analytics.trackAppStart(selectedMode);
     intro.classList.add("fade-out");
     document.getElementById("app").classList.remove("hidden");
 
@@ -138,6 +140,7 @@ function applyMode(mode) {
 
 function toggleMode() {
   applyMode(state.mode === "js" ? "python" : "js");
+  Analytics.trackModeToggle(state.mode);
   const msg = state.mode === "js"
     ? "🔀 JS 개발자 모드: JavaScript와 비교하며 학습합니다"
     : "🐣 순수 Python 모드: 파이썬에 집중합니다";
@@ -213,8 +216,15 @@ function loadChapter(chapter) {
     el.classList.toggle("active", el.dataset.id === chapter.id);
   });
 
+  Analytics.trackChapterSelect(chapter);
+
   renderSection();
   updateSectionNav();
+
+  const sections = getContentSections();
+  if (sections.length > 0) {
+    Analytics.trackSectionView(chapter, 0, sections.length);
+  }
 
   if (window.innerWidth <= 900) {
     toggleSidebar(false);
@@ -320,13 +330,17 @@ function renderSection() {
     btn.addEventListener("click", () => {
       const idx = parseInt(btn.dataset.codeIdx);
       const codeBlock = section.blocks[idx];
-      if (codeBlock) loadCodeToEditor(codeBlock.content);
+      if (codeBlock) {
+        Analytics.trackCodeLoad(ch, state.currentSectionIdx);
+        loadCodeToEditor(codeBlock.content);
+      }
     });
   });
 
   block.querySelectorAll(".run-section-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       if (section.code) {
+        Analytics.trackCodeLoad(ch, state.currentSectionIdx);
         loadCodeToEditor(section.code);
         setTimeout(runCode, 200);
       }
@@ -337,6 +351,7 @@ function renderSection() {
     btn.addEventListener("click", () => {
       const exNum = btn.dataset.exercise;
       const ex = section.exercises.find((e) => e.number === parseInt(exNum));
+      Analytics.trackExerciseAttempt(ch, parseInt(exNum));
       const template = `# 연습 ${exNum}: ${(ex?.description || "").split("\n")[0]}\n# 아래에 코드를 작성하세요!\n\n`;
       loadCodeToEditor(template);
     });
@@ -439,16 +454,19 @@ finally:
     if (exception) {
       statusEl.textContent = "오류 발생";
       statusEl.className = "exec-status error";
+      Analytics.trackCodeRun(state.currentChapter, state.currentSectionIdx, false);
     } else {
       statusEl.textContent = "실행 완료";
       statusEl.className = "exec-status success";
       appendTerminal("\n✅ 실행이 완료되었습니다.", "success");
+      Analytics.trackCodeRun(state.currentChapter, state.currentSectionIdx, true);
       markCurrentSectionDone();
     }
   } catch (err) {
     appendTerminal(err.message, "stderr");
     statusEl.textContent = "오류 발생";
     statusEl.className = "exec-status error";
+    Analytics.trackCodeRun(state.currentChapter, state.currentSectionIdx, false);
   } finally {
     try {
       state.pyodide.runPython(`
@@ -485,6 +503,10 @@ function markCurrentSectionDone() {
   if (state.progress.completedSections.includes(key)) return;
 
   state.progress.completedSections.push(key);
+
+  const sections = getContentSections();
+  Analytics.trackSectionComplete(state.currentChapter, state.currentSectionIdx, sections.length);
+
   addXP(XP_PER_SECTION);
   checkChapterCompletion();
   saveProgress();
@@ -516,6 +538,7 @@ function checkChapterCompletion() {
 
   if (allDone && !state.progress.completedChapters.includes(ch.id)) {
     state.progress.completedChapters.push(ch.id);
+    Analytics.trackChapterComplete(ch, state.progress.completedChapters.length);
     addXP(XP_PER_CHAPTER);
     showToast(`🎉 ${ch.title} 챕터 완료! +${XP_PER_CHAPTER} XP`, "achievement");
 
@@ -537,6 +560,7 @@ function addXP(amount) {
   }
 
   if (newLevel > oldLevel) {
+    Analytics.trackLevelUp(newLevel, state.progress.xp);
     showLevelUp(newLevel);
   }
 
@@ -577,6 +601,7 @@ function updateStats() {
 function resetProgress() {
   if (!confirm("모든 학습 진행 상황(XP, 레벨, 완료 기록)이 초기화됩니다.\n정말 초기화할까요?")) return;
 
+  Analytics.trackProgressReset();
   state.progress = { xp: 0, completedSections: [], completedChapters: [], streak: 0, lastDate: null };
   saveProgress();
   updateStats();
@@ -656,6 +681,10 @@ function bindEvents() {
       renderSection();
       updateSectionNav();
       document.getElementById("learning-content").scrollTop = 0;
+      if (state.currentChapter) {
+        const sections = getContentSections();
+        Analytics.trackSectionView(state.currentChapter, state.currentSectionIdx, sections.length);
+      }
     }
   });
 
@@ -666,6 +695,7 @@ function bindEvents() {
       renderSection();
       updateSectionNav();
       document.getElementById("learning-content").scrollTop = 0;
+      Analytics.trackSectionView(state.currentChapter, state.currentSectionIdx, sections.length);
     }
   });
 
