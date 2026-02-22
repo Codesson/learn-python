@@ -78,8 +78,11 @@ html, body {
 .loader-content { text-align: center; }
 
 .loader-icon {
-  font-size: 64px;
   animation: bounce 1.2s ease infinite;
+}
+.loader-logo {
+  width: 80px;
+  height: auto;
 }
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
@@ -165,7 +168,16 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 30px;
+  padding: 10px 20px;
+}
+.hero-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-nav-logo {
+  height: 32px;
+  width: auto;
 }
 .hero-logo {
   font-size: 1.1rem;
@@ -191,8 +203,15 @@ html, body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 60px 24px 40px;
+  padding: 0 24px 20px;
 }
+.hero-logo-main {
+  width: 120px;
+  height: auto;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 20px rgba(137, 180, 250, 0.2));
+}
+
 .hero-eyebrow {
   font-size: 0.78rem;
   font-weight: 600;
@@ -311,7 +330,7 @@ html, body {
   gap: 20px;
   max-width: 860px;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 28px 24px 20px;
 }
 .hero-card {
   background: rgba(24, 24, 37, 0.6);
@@ -346,7 +365,7 @@ html, body {
   position: relative;
   z-index: 1;
   text-align: center;
-  padding: 20px 20px 10px;
+  padding: 10px 20px;
   font-size: 0.72rem;
   color: var(--text-muted);
 }
